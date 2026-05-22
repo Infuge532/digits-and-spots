@@ -94,19 +94,31 @@
             </div>
 
             <!--
-              GOOGLE MAPS EMBED:
-              Replace this placeholder div with your embed iframe, e.g.:
+              GOOGLE MAPS EMBED — how to get your embed code:
+              1. Go to https://maps.google.com
+              2. Search for: 8500 W 110th St Suite 205, Overland Park, KS 66210
+              3. Click Share → Embed a map → Copy HTML
+              4. Paste the <iframe> tag below, replacing the placeholder div.
+
+              The iframe should look roughly like this (your src URL will be unique):
               <iframe
-                src="https://www.google.com/maps/embed?pb=..."
-                width="100%" height="280" style="border:0; border-radius:14px; margin-top:20px;"
+                src="https://www.google.com/maps/embed?pb=!1m18!..."
+                width="100%" height="260"
+                style="border:0; border-radius:14px; display:block;"
                 allowfullscreen="" loading="lazy"
                 referrerpolicy="no-referrer-when-downgrade"
-                title="Digits &amp; Spots location map">
+                title="Digits &amp; Spots — 8500 W 110th St, Overland Park, KS">
               </iframe>
             -->
-            <div class="ds-map-placeholder">
-              📍 8500 W 110th St, Suite 205 · Overland Park, KS 66210<br>
-              <small style="margin-top:4px; display:block;">(embed Google Map here)</small>
+            <div class="ds-map-placeholder" id="map-placeholder">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3103.753471097652!2d-94.68478552410875!3d38.929611944802836!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x87c0ea56bc0dcf51%3A0x35dce3a68672e450!2s8500%20W%20110th%20St%20Suite%20205%2C%20Overland%20Park%2C%20KS%2066210!5e0!3m2!1sen!2sus!4v1779480967660!5m2!1sen!2sus"
+                width="100%" height="260"
+                style="border:0; border-radius:14px; display:block;"
+                allowfullscreen="" loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                title="Digits &amp; Spots — 8500 W 110th St, Overland Park, KS">
+              </iframe>
             </div>
           </div>
 
@@ -114,15 +126,27 @@
           <div class="ds-form-card">
             <h3>Tell us about your needs</h3>
             <!--
-              FORM BACKEND OPTIONS:
-              Option A — Formspree (no server needed):
-                <form action="https://formspree.io/f/YOUR_FORM_ID" method="POST" class="ds-contact-form">
-              Option B — Netlify Forms:
-                <form name="contact" method="POST" data-netlify="true" class="ds-contact-form">
-              Option C — Custom backend:
-                Wire up via fetch() in main.js — the JS already handles the submit event.
+              FORMSPREE SETUP (one-time):
+              1. Go to https://formspree.io and sign up / log in.
+              2. Create a new form — Formspree will give you a unique form ID
+                 that looks like: xpwzabcd
+              3. Replace YOUR_FORM_ID in the action URL below with that ID.
+              4. Formspree will email submissions to the address on your account.
+                 You can change the recipient inside your Formspree dashboard.
+              5. (Optional) In the Formspree dashboard, set a custom Reply-To
+                 field to "email" so you can reply directly to patients.
             -->
-            <form class="ds-contact-form" novalidate>
+            <form
+              class="ds-contact-form"
+              action="https://formspree.io/f/mwvzbyea"
+              method="POST"
+              novalidate
+            >
+              <!-- Formspree config fields -->
+              <input type="hidden" name="_subject" value="New appointment request — Digits &amp; Spots" />
+              <input type="hidden" name="_next" value="" />
+              <!-- Honeypot spam trap — keep hidden -->
+              <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off" />
 
               <div class="ds-field">
                 <label for="name">Your name <span style="color:#c0392b;" aria-hidden="true">*</span></label>
@@ -173,7 +197,15 @@
                 <textarea id="message" name="message" placeholder="Optional — feel free to share any background that would be helpful."></textarea>
               </div>
 
-              <button type="submit" class="ds-btn-primary" style="width:100%; text-align:center; padding:13px;">Send Request</button>
+              <!-- Success / error messages — shown by main.js after submit -->
+              <div id="form-success" role="alert" style="display:none; background:var(--sage-pale); border:1px solid var(--sage-light); border-radius:12px; padding:16px 18px; margin-bottom:14px; font-size:14px; color:var(--sage-deep); line-height:1.5;">
+                ✓ <strong>Request sent!</strong> Kathleen will be in touch soon. You can also reach her directly at <a href="tel:9132064016" style="color:var(--sage-deep);">913-206-4016</a>.
+              </div>
+              <div id="form-error" role="alert" style="display:none; background:#fdf2f2; border:1px solid #e8b4b4; border-radius:12px; padding:16px 18px; margin-bottom:14px; font-size:14px; color:#8b2e2e; line-height:1.5;">
+                ✗ Something went wrong — please try again or call <a href="tel:9132064016" style="color:#8b2e2e;">913-206-4016</a> directly.
+              </div>
+
+              <button type="submit" class="ds-btn-primary" id="form-submit-btn" style="width:100%; text-align:center; padding:13px;">Send Request</button>
               <p class="ds-form-note">Or call directly: <a href="tel:9132064016">913-206-4016</a></p>
             </form>
           </div>
@@ -207,5 +239,61 @@
   </footer>
 
   <script src="js/main.js"></script>
+  <script>
+    // Formspree AJAX submission — intercepts the native POST so the page
+    // doesn't redirect, and instead shows the inline success / error state.
+    (function () {
+      var form    = document.querySelector('.ds-contact-form');
+      var btn     = document.getElementById('form-submit-btn');
+      var success = document.getElementById('form-success');
+      var error   = document.getElementById('form-error');
+
+      if (!form) return;
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        // Basic client-side required-field check
+        var name  = form.querySelector('#name');
+        var phone = form.querySelector('#phone');
+        var valid = true;
+        [name, phone].forEach(function (el) {
+          if (!el.value.trim()) {
+            el.style.borderColor = '#c0392b';
+            valid = false;
+          } else {
+            el.style.borderColor = '';
+          }
+        });
+        if (!valid) return;
+
+        // Send to Formspree
+        btn.disabled    = true;
+        btn.textContent = 'Sending…';
+        success.style.display = 'none';
+        error.style.display   = 'none';
+
+        fetch(form.action, {
+          method:  'POST',
+          body:    new FormData(form),
+          headers: { 'Accept': 'application/json' }
+        })
+        .then(function (res) {
+          if (res.ok) {
+            success.style.display = 'block';
+            form.reset();
+            btn.textContent = 'Sent ✓';
+          } else {
+            return res.json().then(function (data) { throw data; });
+          }
+        })
+        .catch(function () {
+          error.style.display = 'block';
+          btn.disabled    = false;
+          btn.textContent = 'Send Request';
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
