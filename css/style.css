@@ -305,6 +305,7 @@ body {
 }
 .ds-card p { font-size: 13px; color: var(--warm-mid); line-height: 1.65; }
 .ds-card-link { color: var(--sage); font-size: 13px; }
+a.ds-card { text-decoration: none; color: inherit; display: block; cursor: pointer; }
 
 /* ===================================================
    STAT CARDS
@@ -467,7 +468,6 @@ body {
   color: rgba(255,255,255,0.5); font-size: 12px; text-align: center;
   padding: 20px; position: relative;
 }
-/* Swap in a real photo: add class ds-portrait-photo and set background-image */
 .ds-portrait-photo {
   background-size: cover;
   background-position: center top;
@@ -553,9 +553,8 @@ body {
 .ds-citem-val a:hover { color: var(--sage); }
 
 .ds-map-placeholder {
-  background: var(--warm-tan); border-radius: 14px; height: 180px;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--warm-muted); font-size: 13px; margin-top: 20px;
+  background: var(--warm-tan); border-radius: 14px;
+  overflow: hidden; margin-top: 20px;
   border: 1px solid var(--warm-tan);
 }
 
@@ -654,15 +653,62 @@ body {
 }
 
 /* ===================================================
-   SERVICE CARDS (Home)
+   SYMPTOM CHIPS (interactive checklist)
    =================================================== */
 
-.ds-service-num {
-  font-family: var(--font-display);
-  font-size: 52px; font-weight: 600;
-  color: var(--warm-tan); line-height: 1;
-  margin-bottom: 14px; letter-spacing: -2px;
+.ds-symptoms {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px; margin: 24px 0;
 }
+.ds-symptom {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px;
+  background: white; border: 1.5px solid var(--warm-tan);
+  border-radius: 10px;
+  font-size: 13.5px; color: var(--warm-mid);
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s, color 0.18s;
+  user-select: none;
+}
+.ds-symptom.checked { border-color: var(--sage); background: var(--sage-pale); color: var(--sage-deep); }
+.ds-symptom-box {
+  width: 18px; height: 18px; border-radius: 5px;
+  border: 1.5px solid var(--warm-tan); flex-shrink: 0;
+  transition: background 0.18s, border-color 0.18s;
+  display: flex; align-items: center; justify-content: center;
+}
+.ds-symptom.checked .ds-symptom-box { background: var(--sage); border-color: var(--sage); }
+.ds-symptom.checked .ds-symptom-box::after {
+  content: '';
+  width: 4px; height: 8px;
+  border: 2px solid white; border-top: none; border-left: none;
+  transform: rotate(45deg) translate(-1px, -1px);
+}
+
+/* ===================================================
+   RESOURCE LIST
+   =================================================== */
+
+.ds-resource-list { display: flex; flex-direction: column; }
+.ds-resource-item {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 18px 0; border-bottom: 1px solid var(--warm-tan);
+}
+.ds-resource-item:last-child { border-bottom: none; }
+.ds-resource-icon {
+  width: 36px; height: 36px; flex-shrink: 0;
+  background: var(--sage-pale); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; margin-top: 2px;
+}
+.ds-resource-name { font-size: 14px; font-weight: 500; color: var(--warm-dark); margin-bottom: 4px; }
+.ds-resource-name a { color: var(--sage-deep); text-decoration: none; }
+.ds-resource-name a:hover { text-decoration: underline; }
+.ds-resource-desc { font-size: 13px; color: var(--warm-mid); line-height: 1.6; }
+
+/* Audience card sub-text */
+.ds-audience-card .ds-sub,
+.ds-card .ds-sub { font-size: 13px; color: var(--warm-muted); margin-bottom: 16px; }
 
 /* ===================================================
    RESPONSIVE — MOBILE
@@ -705,6 +751,7 @@ body {
   .ds-trust           { gap: 16px; }
   .ds-referral        { flex-direction: column; }
   .ds-footer-grid     { grid-template-columns: 1fr; gap: 28px; }
+  .ds-symptoms        { grid-template-columns: 1fr; }
 
   .ds-section { padding: 44px 0; }
   .ds-dark    { padding: 44px 0; }
